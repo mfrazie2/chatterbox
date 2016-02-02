@@ -4,55 +4,132 @@ You should implement your request handler function in this file.
 
 requestHandler is already getting passed to http.createServer()
 in basic-server.js, but it won't work as is.
-
+#####
 You'll have to figure out a way to export this function from
 this file and include it in basic-server.js so that it actually works.
-
+#####
+Maintains access to defaultCorsHeads by closure
+#####
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
 
+var All_Messages = [];
+
 var requestHandler = function(request, response) {
-  // Request and Response come from node's http module.
-  //
-  // They include information about both the incoming request, such as
-  // headers and URL, and about the outgoing response, such as its status
-  // and content.
-  //
-  // Documentation for both request and response can be found in the HTTP section at
-  // http://nodejs.org/documentation/api/
 
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
-  console.log("Serving request type " + request.method + " for url " + request.url);
+  var method = request.method;
+  var url = request.url; 
+  var headers = request.headers;
+  
+  // body to hold the data chunks that come through on the request
+  var body = [];
+  
+  if(request.method === 'GET') { // check existence of the path?
+    if(request.url === '') {
+      // response.statusCode = 404;
+      // response.setHeader('Content-type', 'text/plain');
+      response.writeHead(404, {'Content-type': 'text/plain'});
+      response.end();
+    } else {
+      // response.statusCode = 200;
+      // response.setHeader('Content-type', 'application/json');
+      response.writeHead(200, {'Content-type': 'application/json'});
 
-  // The outgoing status.
+      // retrieve from All_Messages
+      var responseMessages = {
+        results: All_Messages,
+        headers: headers,
+        method: method,
+        url: url
+      };
+      // response.write(JSON.stringify(responseMessages));
+      console.log(JSON.stringify(responseMessages));
+      response.end(JSON.stringify(responseMessages));
+    }
+  } else if(request.method === 'POST') { // existence of the path?
+    if(request.url === '') {
+      // response.statusCode = 404;
+      // response.setHeader('Content-type', 'text/plain');
+      response.writeHead(404, {'Content-type': 'text/plain'});
+
+      response.end();
+    } else {
+      // response.statusCode = 201;
+      // response.setHeader('Content-type', 'application/json');
+      response.writeHead(201, {'Content-type': 'application/json'});
+      // push to All_Messages
+       
+      request.on('error', function(err) {
+        console.log(err);
+      });
+      request.on('data', function(chunk) {
+        //console.log(chunk);
+        body.push(chunk);
+      });
+      request.on('end', function() {
+        body = body.concat(body).toString();
+        All_Messages.push(body);
+        console.log(All_Messages);  
+      });  
+      // response.on('error', function(err) {
+      //   console.log(err);
+      // });
+      
+      
+      
+      response.end();
+    }
+  }
+  
+  
+  
+  
+  // event listeners for data and errors
+ 
+  
+    
+  // response.statusCode = 200;
+  // response.setHeader('Content-type', 'application/json');
+  
+  // var responseBody = {
+  //   headers: headers,
+  //   method: method,
+  //   url: url,
+  //   body: body
+  // };
+    
+  // response.write(JSON.stringify(responseBody));
+  // response.end();
+
+/*
+  if(request.method === 'GET') {
+    if(request.url === '') {
+      response.writeHead(404);
+      response.end();
+    } else {
+      response.writeHead(200);
+      response.end();
+    }
+  } else if(request.method === 'POST') {
+    if(request.url === '') {
+
+    }
+  }
+  
+ console.log("Serving request type " + request.method + " for url " + request.url);
+
   var statusCode = 200;
 
-  // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+   headers['Content-Type'] = "text/plain";
 
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
+  
   response.end("Hello, World!");
+  */
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -71,3 +148,4 @@ var defaultCorsHeaders = {
   "access-control-max-age": 10 // Seconds.
 };
 
+exports.requestHandler = requestHandler;
