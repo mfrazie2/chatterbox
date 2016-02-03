@@ -1,4 +1,80 @@
-/*************************************************************
+
+
+var urlParser = require('url');
+
+var All_Messages = [];
+
+var objectId = 1;
+
+var routes = {
+  '/classes/chatterbox': true,
+  '/classes/room1': true,
+  '/classes/messages': true
+}
+
+var actions = {
+  "GET": function(request, response) {
+    sendResponse(response, {results: All_Messages});
+  },
+  "POST": function(request, response) {
+    collectData(request, function(message) {
+      All_Messages.push(message);
+      message.objectId = objectId++;
+      sendResponse(response, {objectId: objectId}, 201);
+    });
+  },
+  "OPTIONS": function(request, response) {
+    sendResponse(response);
+  } 
+};
+
+var collectData = function(request, callback) {
+  var data = '';
+  request.on('data', function(chunk) {
+    data += chunk;
+  });
+  request.on('end', function() {
+    callback(JSON.parse(data));
+  });
+};
+
+var sendResponse = function(response, data, statusCode) {
+  statusCode = statusCode || 200;
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify(data));
+};
+
+var requestHandler = function(request, response) {
+
+  var method = request.method;
+  
+  var parts = urlParser.parse(request.url);
+  //console.log(parts);
+  var route = routes[parts.pathname];
+  //console.log(route);
+  
+  
+  var action = actions[method];
+  if(action && route) {
+    action(request, response);
+  } else {
+    sendResponse(response, 'Not Found', 404);
+  }
+  
+  
+};  
+  
+var headers = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, accept",
+  "access-control-max-age": 10, // Seconds.
+  "Content-type": "application/json"
+};
+
+exports.requestHandler = requestHandler;
+  
+  /*************************************************************
 
 You should implement your request handler function in this file.
 
@@ -13,74 +89,8 @@ Maintains access to defaultCorsHeads by closure
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
-var All_Messages = [];
-
-var requestHandler = function(request, response) {
-
-  var method = request.method;
-  var url = request.url; 
-  var headers = request.headers;
   
-  // body to hold the data chunks that come through on the request
-  var body = [];
   
-  if(request.method === 'GET') { // check existence of the path?
-    if(request.url === '') {
-      // response.statusCode = 404;
-      // response.setHeader('Content-type', 'text/plain');
-      response.writeHead(404, {'Content-type': 'text/plain'});
-      response.end();
-    } else {
-      // response.statusCode = 200;
-      // response.setHeader('Content-type', 'application/json');
-      response.writeHead(200, {'Content-type': 'application/json'});
-
-      // retrieve from All_Messages
-      var responseMessages = {
-        results: All_Messages,
-        headers: headers,
-        method: method,
-        url: url
-      };
-      // response.write(JSON.stringify(responseMessages));
-      console.log(JSON.stringify(responseMessages));
-      response.end(JSON.stringify(responseMessages));
-    }
-  } else if(request.method === 'POST') { // existence of the path?
-    if(request.url === '') {
-      // response.statusCode = 404;
-      // response.setHeader('Content-type', 'text/plain');
-      response.writeHead(404, {'Content-type': 'text/plain'});
-
-      response.end();
-    } else {
-      // response.statusCode = 201;
-      // response.setHeader('Content-type', 'application/json');
-      response.writeHead(201, {'Content-type': 'application/json'});
-      // push to All_Messages
-       
-      request.on('error', function(err) {
-        console.log(err);
-      });
-      request.on('data', function(chunk) {
-        //console.log(chunk);
-        body.push(chunk);
-      });
-      request.on('end', function() {
-        body = body.concat(body).toString();
-        All_Messages.push(body);
-        console.log(All_Messages);  
-      });  
-      // response.on('error', function(err) {
-      //   console.log(err);
-      // });
-      
-      
-      
-      response.end();
-    }
-  }
   
   
   
@@ -130,7 +140,7 @@ var requestHandler = function(request, response) {
   
   response.end("Hello, World!");
   */
-};
+
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -141,11 +151,3 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept",
-  "access-control-max-age": 10 // Seconds.
-};
-
-exports.requestHandler = requestHandler;
