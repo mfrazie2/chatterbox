@@ -5,6 +5,7 @@
   "author": "Hack Reactor Remote Beta",
   "license": "Copyright 2013, Hack Reactor Remote Beta. All rights reserved.",
   "scripts": {
+    "start": "nodemon server/basic-server.js",
     "test": "mocha server/spec"
   },
   "devDependencies": {
