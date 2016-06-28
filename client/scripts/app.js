@@ -1,30 +1,3 @@
-/*
-  Structure code to avoid spaghetti code
-  Be cognizant of the variables on the global scope
-  App should load itself; app.init() should not be invoked on this page; invoke it in a script tag
-    in index.html
-  Decoupling logic
-  Try to loosely couple the methods within the app
-    Should not rely on one method to influence another method
-    Methods should be good at ONE thing
-*/
-
-/*
-  User Expectations / User Experiences
-    // Remember my username \\
-    // Remember room I was last in \\ 
-    // Chat messages to load for the room I am in (default room is lobby) \\
-    // Chat messages to refresh and be up to date \\
-    // Add my own chat messages \\
-    // Create a new room \\
-    // See all the rooms \\
-    // Change the room I am in and see messages for the room \\
-    Add friends
-    Be able to distinguish messages from friends
-*/
-
-// ~/classes/chatterbox ended the url on client side
-
 var app;
 
 $(document).ready(function() {
@@ -43,7 +16,7 @@ $(document).ready(function() {
     
     init: function() {
       // grab username from the window prompt
-      app.username = window.location.search.substr(10);
+      app.username = window.prompt("What's your username?");
       
       app.$main = $('#main');
       app.$message = $('#message');
@@ -109,7 +82,7 @@ $(document).ready(function() {
         url: app.server,
         type: 'GET',
         contentType: 'application/json',
-        data: {order: '-createdAt'}, // gets 100 most recent data
+        // data: {order: '-createdAt'}, // gets 100 most recent data
         complete: function() {app.stopSpinner();},
         success: function(data) {
           // always process room data
@@ -217,7 +190,7 @@ $(document).ready(function() {
         roomname : app.room || 'lobby',
         text : app.$message.val()
       };
-      
+      app.$message.val('');
       app.send(message);
       
     },
